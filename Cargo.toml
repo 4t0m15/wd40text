@@ -2,5 +2,9 @@
 name = "wd40text"
 version = "0.1.0"
 edition = "2021"
+authors = ["Arsen Martirosyan <arsenmartirosyan@protonmail.com>"
+]
 
 [dependencies]
+crossterm = "0.27"
+unicode-segmentation = "1"
