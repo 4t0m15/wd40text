@@ -3,7 +3,7 @@ use crate::Position;
 use crate::Row;
 use crate::SearchDirection;
 use std::fs;
-use std::io::{Error, Write};
+use std::io::{Error, Write as _};
 
 #[derive(Default)]
 pub struct Document {
@@ -23,20 +23,24 @@ impl Document {
         }
         Ok(Self {
             rows,
-            file_name: Some(filename.to_string()),
+            file_name: Some(filename.to_owned()),
             dirty: false,
             file_type,
         })
     }
+    #[must_use] 
     pub fn file_type(&self) -> String {
         self.file_type.name()
     }
+    #[must_use] 
     pub fn row(&self, index: usize) -> Option<&Row> {
         self.rows.get(index)
     }
+    #[must_use] 
     pub fn is_empty(&self) -> bool {
         self.rows.is_empty()
     }
+    #[must_use] 
     pub fn len(&self) -> usize {
         self.rows.len()
     }
@@ -48,10 +52,10 @@ impl Document {
             self.rows.push(Row::default());
             return;
         }
-        #[allow(clippy::indexing_slicing)]
+        #[expect(clippy::indexing_slicing)]
         let current_row = &mut self.rows[at.y];
         let new_row = current_row.split(at.x);
-        #[allow(clippy::integer_arithmetic)]
+        #[expect(clippy::arithmetic_side_effects)]
         self.rows.insert(at.y + 1, new_row);
     }
     pub fn insert(&mut self, at: &Position, c: char) {
@@ -66,7 +70,7 @@ impl Document {
             row.insert(0, c);
             self.rows.push(row);
         } else {
-            #[allow(clippy::indexing_slicing)]
+            #[expect(clippy::indexing_slicing)]
             let row = &mut self.rows[at.y];
             row.insert(at.x, c);
         }
@@ -79,7 +83,7 @@ impl Document {
             row.is_highlighted = false;
         }
     }
-    #[allow(clippy::integer_arithmetic, clippy::indexing_slicing)]
+    #[expect(clippy::arithmetic_side_effects, clippy::indexing_slicing)]
     pub fn delete(&mut self, at: &Position) {
         let len = self.rows.len();
         if at.y >= len {
@@ -108,10 +112,12 @@ impl Document {
         }
         Ok(())
     }
+    #[must_use] 
     pub fn is_dirty(&self) -> bool {
         self.dirty
     }
-    #[allow(clippy::indexing_slicing)]
+    #[expect(clippy::indexing_slicing)]
+    #[must_use] 
     pub fn find(&self, query: &str, at: &Position, direction: SearchDirection) -> Option<Position> {
         if at.y >= self.rows.len() {
             return None;
@@ -130,7 +136,7 @@ impl Document {
         };
         for _ in start..end {
             if let Some(row) = self.rows.get(position.y) {
-                if let Some(x) = row.find(&query, position.x, direction) {
+                if let Some(x) = row.find(query, position.x, direction) {
                     position.x = x;
                     return Some(position);
                 }
@@ -158,10 +164,10 @@ impl Document {
         } else {
             self.rows.len()
         };
-        #[allow(clippy::indexing_slicing)]
+        #[expect(clippy::indexing_slicing)]
         for row in &mut self.rows[..until] {
             start_with_comment = row.highlight(
-                &self.file_type.highlighting_options(),
+                self.file_type.highlighting_options(),
                 word,
                 start_with_comment,
             );

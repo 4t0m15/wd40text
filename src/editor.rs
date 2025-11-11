@@ -4,7 +4,7 @@ use crate::Terminal;
 use crossterm::event::{KeyCode, KeyModifiers};
 use crossterm::style::Color;
 use std::env;
-use std::time::Duration;
+use core::time::Duration;
 use std::time::Instant;
 
 const STATUS_FG_COLOR: Color = Color::Rgb {
@@ -80,7 +80,7 @@ impl Editor {
             if let Ok(doc) = doc {
                 doc
             } else {
-                initial_status = format!("ERR: Could not open file: {}", file_name);
+                initial_status = format!("ERR: Could not open file: {file_name}");
                 Document::default()
             }
         } else {
@@ -129,16 +129,16 @@ impl Editor {
         if self.document.file_name.is_none() {
             let new_name = self.prompt("Save as: ", |_, _, _, _| {}).unwrap_or(None);
             if new_name.is_none() {
-                self.status_message = StatusMessage::from("Save aborted.".to_string());
+                self.status_message = StatusMessage::from("Save aborted.".to_owned());
                 return;
             }
             self.document.file_name = new_name;
         }
 
         if self.document.save().is_ok() {
-            self.status_message = StatusMessage::from("File saved successfully.".to_string());
+            self.status_message = StatusMessage::from("File saved successfully.".to_owned());
         } else {
-            self.status_message = StatusMessage::from("Error writing file!".to_string());
+            self.status_message = StatusMessage::from("Error writing file!".to_owned());
         }
     }
     fn search(&mut self) {
@@ -161,14 +161,14 @@ impl Editor {
                     if let Some(position) =
                         editor
                             .document
-                            .find(&query, &editor.cursor_position, direction)
+                            .find(query, &editor.cursor_position, direction)
                     {
                         editor.cursor_position = position;
                         editor.scroll();
                     } else if moved {
                         editor.move_cursor(KeyCode::Left);
                     }
-                    editor.highlighted_word = Some(query.to_string());
+                    editor.highlighted_word = Some(query.clone());
                 },
             )
             .unwrap_or(None);
@@ -191,7 +191,7 @@ impl Editor {
                     self.quit_times -= 1;
                     return Ok(());
                 }
-                self.should_quit = true
+                self.should_quit = true;
             }
             KeyCode::Char('s') if modifiers.contains(KeyModifiers::CONTROL) => self.save(),
             KeyCode::Char('f') if modifiers.contains(KeyModifiers::CONTROL) => self.search(),
@@ -308,24 +308,24 @@ impl Editor {
         self.cursor_position = Position { x, y }
     }
     fn draw_welcome_message(&self) {
-        let mut welcome_message = format!("Hecto editor -- version {}", VERSION);
+        let mut welcome_message = format!("Hecto editor -- version {VERSION}");
         let width = self.terminal.size().width as usize;
         let len = welcome_message.len();
-        #[allow(clippy::integer_arithmetic, clippy::integer_division)]
+        #[expect(clippy::arithmetic_side_effects, clippy::integer_division)]
         let padding = width.saturating_sub(len) / 2;
         let spaces = " ".repeat(padding.saturating_sub(1));
-        welcome_message = format!("~{}{}", spaces, welcome_message);
+        welcome_message = format!("~{spaces}{welcome_message}");
         welcome_message.truncate(width);
-        println!("{}\r", welcome_message);
+        println!("{welcome_message}\r");
     }
     pub fn draw_row(&self, row: &Row) {
         let width = self.terminal.size().width as usize;
         let start = self.offset.x;
         let end = self.offset.x.saturating_add(width);
         let row = row.render(start, end);
-        println!("{}\r", row)
+        println!("{row}\r");
     }
-    #[allow(clippy::integer_division, clippy::integer_arithmetic)]
+    #[expect(clippy::integer_division, clippy::arithmetic_side_effects)]
     fn draw_rows(&self) {
         let height = self.terminal.size().height;
         for terminal_row in 0..height {
@@ -351,7 +351,7 @@ impl Editor {
             ""
         };
 
-        let mut file_name = "[No Name]".to_string();
+        let mut file_name = "[No Name]".to_owned();
         if let Some(name) = &self.document.file_name {
             file_name = name.clone();
             file_name.truncate(20);
@@ -369,24 +369,24 @@ impl Editor {
             self.cursor_position.y.saturating_add(1),
             self.document.len()
         );
-        #[allow(clippy::integer_arithmetic)]
+        #[expect(clippy::arithmetic_side_effects)]
         let len = status.len() + line_indicator.len();
         status.push_str(&" ".repeat(width.saturating_sub(len)));
-        status = format!("{}{}", status, line_indicator);
+        status = format!("{status}{line_indicator}");
         status.truncate(width);
         Terminal::set_bg_color(STATUS_BG_COLOR);
         Terminal::set_fg_color(STATUS_FG_COLOR);
-        println!("{}\r", status);
+        println!("{status}\r");
         Terminal::reset_fg_color();
         Terminal::reset_bg_color();
     }
     fn draw_message_bar(&self) {
         Terminal::clear_current_line();
         let message = &self.status_message;
-        if Instant::now() - message.time < Duration::new(5, 0) {
+        if message.time.elapsed() < Duration::new(5, 0) {
             let mut text = message.text.clone();
             text.truncate(self.terminal.size().width as usize);
-            print!("{}", text);
+            print!("{text}");
         }
     }
     fn prompt<C>(&mut self, prompt: &str, mut callback: C) -> Result<Option<String>, std::io::Error>
@@ -395,7 +395,7 @@ impl Editor {
     {
         let mut result = String::new();
         loop {
-            self.status_message = StatusMessage::from(format!("{}{}", prompt, result));
+            self.status_message = StatusMessage::from(format!("{prompt}{result}"));
             self.refresh_screen()?;
             let (key, modifiers) = Terminal::read_key_with_modifiers()?;
             match key {

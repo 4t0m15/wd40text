@@ -6,7 +6,7 @@ use crossterm::{
     style::{Color, SetBackgroundColor, SetForegroundColor},
     terminal::{self, ClearType},
 };
-use std::io::{stdout, Write};
+use std::io::{stdout, Write as _};
 
 pub struct Size {
     pub width: u16,
@@ -29,6 +29,7 @@ impl Terminal {
         })
     }
 
+    #[must_use] 
     pub fn size(&self) -> &Size {
         &self.size
     }
