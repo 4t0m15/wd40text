@@ -24,15 +24,15 @@ impl Default for FileType {
 }
 
 impl FileType {
-    #[must_use] 
+    #[must_use]
     pub fn name(&self) -> String {
         self.name.clone()
     }
-    #[must_use] 
+    #[must_use]
     pub fn highlighting_options(&self) -> &HighlightingOptions {
         &self.hl_opts
     }
-    #[must_use] 
+    #[must_use]
     pub fn from(file_name: &str) -> Self {
         if file_name.ends_with(".rs") {
             return Self {
@@ -114,37 +114,55 @@ impl FileType {
                     ],
                 },
             };
+        } else if file_name.ends_with(".txt") {
+            // Plain text: no special highlighting
+            return Self {
+                name: String::from("Plain Text"),
+                hl_opts: HighlightingOptions::default(),
+            };
+        } else if file_name.ends_with(".docx") {
+            // Word document: treated as plain text for viewing; name indicates format
+            return Self {
+                name: String::from("DOCX"),
+                hl_opts: HighlightingOptions::default(),
+            };
+        } else if file_name.ends_with(".odt") {
+            // OpenDocument text: treated as plain text for viewing; name indicates format
+            return Self {
+                name: String::from("ODT"),
+                hl_opts: HighlightingOptions::default(),
+            };
         }
         Self::default()
     }
 }
 
 impl HighlightingOptions {
-    #[must_use] 
+    #[must_use]
     pub fn numbers(&self) -> bool {
         self.numbers
     }
-    #[must_use] 
+    #[must_use]
     pub fn strings(&self) -> bool {
         self.strings
     }
-    #[must_use] 
+    #[must_use]
     pub fn characters(&self) -> bool {
         self.characters
     }
-    #[must_use] 
+    #[must_use]
     pub fn comments(&self) -> bool {
         self.comments
     }
-    #[must_use] 
+    #[must_use]
     pub fn primary_keywords(&self) -> &Vec<String> {
         &self.primary_keywords
     }
-    #[must_use] 
+    #[must_use]
     pub fn secondary_keywords(&self) -> &Vec<String> {
         &self.secondary_keywords
     }
-    #[must_use] 
+    #[must_use]
     pub fn multiline_comments(&self) -> bool {
         self.multiline_comments
     }

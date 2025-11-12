@@ -44,6 +44,10 @@ impl Document {
     pub fn len(&self) -> usize {
         self.rows.len()
     }
+    #[must_use]
+    pub fn char_count(&self) -> usize {
+        self.rows.iter().map(|r| r.len()).sum()
+    }
     fn insert_newline(&mut self, at: &Position) {
         if at.y > self.rows.len() {
             return;
