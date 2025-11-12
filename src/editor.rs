@@ -2,7 +2,7 @@ use crate::Document;
 use crate::Row;
 use crate::Terminal;
 use core::time::Duration;
-use crossterm::event::{KeyCode, KeyModifiers};
+use crossterm::event::KeyCode;
 use crossterm::style::Color;
 use std::env;
 use std::time::Instant;
@@ -18,7 +18,6 @@ const STATUS_BG_COLOR: Color = Color::Rgb {
     b: 239,
 };
 const VERSION: &str = env!("CARGO_PKG_VERSION");
-const QUIT_TIMES: u8 = 3;
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum SearchDirection {
@@ -52,8 +51,9 @@ pub struct Editor {
     offset: Position,
     document: Document,
     status_message: StatusMessage,
-    quit_times: u8,
-    highlighted_word: Option<String>,
+    command_buffer: Option<String>,
+    last_keys: Vec<char>,
+    pending_save_command: Option<String>,
 }
 
 impl Editor {
@@ -74,7 +74,7 @@ impl Editor {
     pub fn default() -> Self {
         let args: Vec<String> = env::args().collect();
         let mut initial_status =
-            String::from("HELP: Ctrl+F = find | Ctrl+S = save | Ctrl+Q = quit");
+            String::from("Good Luck, have fun! Type i.: to enter command mode.");
         let document = if let Some(file_name) = args.get(1) {
             let doc = Document::open(file_name);
             if let Ok(doc) = doc {
@@ -94,8 +94,9 @@ impl Editor {
             cursor_position: Position::default(),
             offset: Position::default(),
             status_message: StatusMessage::from(initial_status),
-            quit_times: QUIT_TIMES,
-            highlighted_word: None,
+            command_buffer: None,
+            last_keys: Vec::new(),
+            pending_save_command: None,
         }
     }
 
@@ -107,7 +108,7 @@ impl Editor {
             println!("Come Again!.\r");
         } else {
             self.document.highlight(
-                &self.highlighted_word,
+                &None,
                 Some(
                     self.offset
                         .y
@@ -117,158 +118,198 @@ impl Editor {
             self.draw_rows();
             self.draw_status_bar();
             self.draw_message_bar();
-            Terminal::cursor_position(&Position {
-                x: self.cursor_position.x.saturating_sub(self.offset.x),
-                y: self.cursor_position.y.saturating_sub(self.offset.y),
-            });
+            if let Some(ref buffer) = self.command_buffer {
+                Terminal::cursor_position(&Position {
+                    x: buffer.len() + 1,
+                    y: self.terminal.size().height as usize + 1,
+                });
+            } else {
+                Terminal::cursor_position(&Position {
+                    x: self.cursor_position.x.saturating_sub(self.offset.x),
+                    y: self.cursor_position.y.saturating_sub(self.offset.y),
+                });
+            }
         }
         Terminal::cursor_show();
         Terminal::flush()
     }
-    fn save(&mut self) {
-        if self.document.file_name.is_none() {
-            // Ask for a base file name first (without extension)
-            let base_name = self.prompt("name: ", |_, _, _, _| {}).unwrap_or(None);
-            if base_name.is_none() {
-                self.status_message = StatusMessage::from("aborted".to_owned());
-                return;
+    fn execute_command(&mut self, command: &str) {
+        match command.trim() {
+            "help" | "h" => {
+                self.status_message = StatusMessage::from(
+                    "Commands: :w=save | :q=quit | :wq=save&quit | :help".to_owned(),
+                );
             }
-            let mut base_name = base_name.unwrap();
-
-            // If the user already provided an extension in the name, use it as-is.
-            // Otherwise, ask for a preferred extension and append it.
-            if !base_name.contains('.') {
-                let ext = self
-                    .prompt("(txt/docx/odt): ", |_, _, _, _| {})
-                    .unwrap_or(None);
-                let chosen_ext = match ext.as_deref() {
-                    Some(ext) => {
-                        let mut e = ext.trim().to_ascii_lowercase();
-                        if e.starts_with('.') {
-                            e = e.trim_start_matches('.').to_string();
-                        }
-                        match e.as_str() {
-                            "txt" | "docx" | "odt" => e,
-                            _ => "txt".to_string(),
-                        }
+            "w" | "save" => {
+                if self.document.file_name.is_some() {
+                    if self.document.save().is_ok() {
+                        self.status_message =
+                            StatusMessage::from("File saved successfully.".to_owned());
+                    } else {
+                        self.status_message = StatusMessage::from("Error writing file!".to_owned());
                     }
-                    None => "txt".to_string(), // default to txt if empty/cancelled
-                };
-                base_name.push('.');
-                base_name.push_str(&chosen_ext);
+                } else {
+                    // Prompt for filename
+                    self.pending_save_command = Some("w".to_owned());
+                    self.command_buffer = Some(String::new());
+                    self.status_message = StatusMessage::from("Save as: ".to_owned());
+                }
             }
-            self.document.file_name = Some(base_name);
-        }
-
-        if self.document.save().is_ok() {
-            self.status_message = StatusMessage::from("File saved successfully.".to_owned());
-        } else {
-            self.status_message = StatusMessage::from("Error writing file!".to_owned());
-        }
-    }
-    fn search(&mut self) {
-        let old_position = self.cursor_position.clone();
-        let mut direction = SearchDirection::Forward;
-        let query = self
-            .prompt(
-                "Search (ESC to cancel, Arrows to navigate): ",
-                |editor, key, _mods, query| {
-                    let mut moved = false;
-                    match key {
-                        KeyCode::Right | KeyCode::Down => {
-                            direction = SearchDirection::Forward;
-                            editor.move_cursor(KeyCode::Right);
-                            moved = true;
-                        }
-                        KeyCode::Left | KeyCode::Up => direction = SearchDirection::Backward,
-                        _ => direction = SearchDirection::Forward,
+            "q!" | "quit!" => {
+                // Force quit: discard unsaved changes and exit immediately
+                self.should_quit = true;
+            }
+            "q" | "quit" => {
+                if self.document.is_dirty() {
+                    self.status_message = StatusMessage::from(
+                        "File has unsaved changes! Use :wq to save and quit, or :q! to quit without saving.".to_owned(),
+                    );
+                } else {
+                    self.should_quit = true;
+                }
+            }
+            "wq" => {
+                if self.document.file_name.is_some() {
+                    if self.document.save().is_ok() {
+                        self.should_quit = true;
+                    } else {
+                        self.status_message = StatusMessage::from("Error writing file!".to_owned());
                     }
-                    if let Some(position) =
-                        editor
-                            .document
-                            .find(query, &editor.cursor_position, direction)
-                    {
-                        editor.cursor_position = position;
-                        editor.scroll();
-                    } else if moved {
-                        editor.move_cursor(KeyCode::Left);
-                    }
-                    editor.highlighted_word = Some(query.clone());
-                },
-            )
-            .unwrap_or(None);
-
-        if query.is_none() {
-            self.cursor_position = old_position;
-            self.scroll();
+                } else {
+                    // Prompt for filename then save and quit
+                    self.pending_save_command = Some("wq".to_owned());
+                    self.command_buffer = Some(String::new());
+                    self.status_message = StatusMessage::from("Save as: ".to_owned());
+                }
+            }
+            _ => {
+                self.status_message = StatusMessage::from(format!("Unknown command: :{}", command));
+            }
         }
-        self.highlighted_word = None;
     }
 
     fn process_keypress(&mut self) -> Result<(), std::io::Error> {
-        let (pressed_key, modifiers) = Terminal::read_key_with_modifiers()?;
+        let pressed_key = Terminal::read_key()?;
 
-        // Handle keyboard shortcuts with Ctrl modifier
-        if modifiers.contains(KeyModifiers::CONTROL) {
+        // Handle command buffer first (highest priority)
+        if let Some(ref mut buffer) = self.command_buffer {
             match pressed_key {
-                KeyCode::Char('q') => {
-                    if self.quit_times > 0 && self.document.is_dirty() {
-                        self.status_message = StatusMessage::from(format!(
-                            "WARNING! File has unsaved changes. Press Ctrl-Q {} more times to quit.",
-                            self.quit_times
-                        ));
-                        self.quit_times -= 1;
-                        return Ok(());
+                KeyCode::Enter => {
+                    let input = buffer.clone();
+                    // clear the command buffer since we're processing it now
+                    self.command_buffer = None;
+
+                    // If there's a pending save command, treat this input as the filename
+                    if let Some(pending_cmd) = self.pending_save_command.take() {
+                        let filename = input.trim();
+                        if !filename.is_empty() {
+                            self.document.file_name = Some(filename.to_owned());
+                            if self.document.save().is_ok() {
+                                self.status_message =
+                                    StatusMessage::from(format!("File saved as: {}", filename));
+                                if pending_cmd == "wq" {
+                                    self.should_quit = true;
+                                }
+                            } else {
+                                self.status_message =
+                                    StatusMessage::from("Error writing file!".to_owned());
+                            }
+                        } else {
+                            self.status_message =
+                                StatusMessage::from("No filename provided.".to_owned());
+                        }
+                        self.last_keys.clear();
+                    } else {
+                        // No pending special prompt — this is a normal command
+                        self.execute_command(&input);
+                        self.last_keys.clear();
                     }
-                    self.should_quit = true;
                 }
-                KeyCode::Char('s') => {
-                    self.save();
+                KeyCode::Esc => {
+                    // Cancel any active command or pending prompt
+                    self.command_buffer = None;
+                    self.pending_save_command = None;
+                    self.status_message = StatusMessage::from("Command cancelled".to_owned());
+                    self.last_keys.clear();
                 }
-                KeyCode::Char('f') => {
-                    self.search();
+                KeyCode::Backspace => {
+                    buffer.pop();
+                }
+                KeyCode::Char(c) => {
+                    buffer.push(c);
                 }
                 _ => (),
             }
-        } else {
-            // Handle regular keypresses
-            match pressed_key {
-                KeyCode::Enter => {
-                    self.document.insert(&self.cursor_position, '\n');
-                    self.cursor_position.x = 0;
-                    self.cursor_position.y = self.cursor_position.y.saturating_add(1);
+            self.scroll();
+            return Ok(());
+        }
+
+        // Handle keypresses
+        match pressed_key {
+            KeyCode::Enter => {
+                self.document.insert(&self.cursor_position, '\n');
+                self.cursor_position.x = 0;
+                self.cursor_position.y = self.cursor_position.y.saturating_add(1);
+                self.last_keys.clear();
+            }
+            KeyCode::Char(c) => {
+                // Track last keys for command sequence
+                self.last_keys.push(c);
+                if self.last_keys.len() > 3 {
+                    self.last_keys.remove(0);
                 }
-                KeyCode::Char(c) => {
+
+                // Check for i.:  sequence to enter command mode
+                if self.last_keys.len() >= 3
+                    && self.last_keys[self.last_keys.len() - 3] == 'i'
+                    && self.last_keys[self.last_keys.len() - 2] == '.'
+                    && self.last_keys[self.last_keys.len() - 1] == ':'
+                {
+                    // Remove the "i.:" that was just typed
+                    for _ in 0..3 {
+                        if self.cursor_position.x > 0 || self.cursor_position.y > 0 {
+                            self.move_cursor(KeyCode::Left);
+                            self.document.delete(&self.cursor_position);
+                        }
+                    }
+
+                    // Enter command mode
+                    self.command_buffer = Some(String::new());
+                    self.status_message = StatusMessage::from("-- COMMAND MODE --".to_owned());
+                    self.last_keys.clear();
+                } else {
                     self.document.insert(&self.cursor_position, c);
                     self.move_cursor(KeyCode::Right);
                 }
-                KeyCode::Delete => {
+            }
+            KeyCode::Delete => {
+                self.document.delete(&self.cursor_position);
+                self.last_keys.clear();
+            }
+            KeyCode::Backspace => {
+                if self.cursor_position.x > 0 || self.cursor_position.y > 0 {
+                    self.move_cursor(KeyCode::Left);
                     self.document.delete(&self.cursor_position);
                 }
-                KeyCode::Backspace => {
-                    if self.cursor_position.x > 0 || self.cursor_position.y > 0 {
-                        self.move_cursor(KeyCode::Left);
-                        self.document.delete(&self.cursor_position);
-                    }
-                }
-                KeyCode::Up
-                | KeyCode::Down
-                | KeyCode::Left
-                | KeyCode::Right
-                | KeyCode::PageUp
-                | KeyCode::PageDown
-                | KeyCode::End
-                | KeyCode::Home => {
-                    self.move_cursor(pressed_key);
-                }
-                _ => (),
+                self.last_keys.clear();
+            }
+            KeyCode::Up
+            | KeyCode::Down
+            | KeyCode::Left
+            | KeyCode::Right
+            | KeyCode::PageUp
+            | KeyCode::PageDown
+            | KeyCode::End
+            | KeyCode::Home => {
+                self.move_cursor(pressed_key);
+                self.last_keys.clear();
+            }
+            _ => {
+                self.last_keys.clear();
             }
         }
 
         self.scroll();
-        if self.quit_times < QUIT_TIMES {
-            self.quit_times = QUIT_TIMES;
-        }
         Ok(())
     }
     fn scroll(&mut self) {
@@ -427,41 +468,20 @@ impl Editor {
     }
     fn draw_message_bar(&self) {
         Terminal::clear_current_line();
-        let message = &self.status_message;
-        if message.time.elapsed() < Duration::new(5, 0) {
-            let mut text = message.text.clone();
-            text.truncate(self.terminal.size().width as usize);
-            print!("{text}");
-        }
-    }
-    fn prompt<C>(&mut self, prompt: &str, mut callback: C) -> Result<Option<String>, std::io::Error>
-    where
-        C: FnMut(&mut Self, KeyCode, KeyModifiers, &String),
-    {
-        let mut result = String::new();
-        loop {
-            self.status_message = StatusMessage::from(format!("{prompt}{result}"));
-            self.refresh_screen()?;
-            let (key, modifiers) = Terminal::read_key_with_modifiers()?;
-            match key {
-                KeyCode::Backspace => result.truncate(result.len().saturating_sub(1)),
-                KeyCode::Enter => break,
-                KeyCode::Char(c) => {
-                    result.push(c);
-                }
-                KeyCode::Esc => {
-                    result.truncate(0);
-                    break;
-                }
-                _ => (),
+        if let Some(ref buffer) = self.command_buffer {
+            if self.pending_save_command.is_some() {
+                print!("Save as: {}", buffer);
+            } else {
+                print!(":{}", buffer);
             }
-            callback(self, key, modifiers, &result);
+        } else {
+            let message = &self.status_message;
+            if message.time.elapsed() < Duration::new(5, 0) {
+                let mut text = message.text.clone();
+                text.truncate(self.terminal.size().width as usize);
+                print!("{text}");
+            }
         }
-        self.status_message = StatusMessage::from(String::new());
-        if result.is_empty() {
-            return Ok(None);
-        }
-        Ok(Some(result))
     }
 }
 
