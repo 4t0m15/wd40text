@@ -54,6 +54,7 @@ pub struct Editor {
     command_buffer: Option<String>,
     last_keys: Vec<char>,
     pending_save_command: Option<String>,
+    pending_force_save: bool,
 }
 
 impl Editor {
@@ -97,6 +98,7 @@ impl Editor {
             command_buffer: None,
             last_keys: Vec::new(),
             pending_save_command: None,
+            pending_force_save: false,
         }
     }
 
@@ -137,7 +139,8 @@ impl Editor {
         match command.trim() {
             "help" | "h" => {
                 self.status_message = StatusMessage::from(
-                    "Commands: :w=save | :q=quit | :wq=save&quit | :help".to_owned(),
+                    "Commands: :w=save | :w!=force save | :q=quit | :wq=save&quit | :help"
+                        .to_owned(),
                 );
             }
             "w" | "save" => {
@@ -155,6 +158,18 @@ impl Editor {
                     self.status_message = StatusMessage::from("Save as: ".to_owned());
                 }
             }
+
+            "w!" | "save!" => {
+                // Always prompt for Save As (force save-as)
+                self.pending_save_command = Some("w".to_owned());
+
+                self.pending_force_save = true;
+
+                self.command_buffer = Some(String::new());
+
+                self.status_message = StatusMessage::from("Save as: ".to_owned());
+            }
+
             "q!" | "quit!" => {
                 // Force quit: discard unsaved changes and exit immediately
                 self.should_quit = true;
@@ -205,8 +220,15 @@ impl Editor {
                         if !filename.is_empty() {
                             self.document.file_name = Some(filename.to_owned());
                             if self.document.save().is_ok() {
-                                self.status_message =
-                                    StatusMessage::from(format!("File saved as: {}", filename));
+                                if self.pending_force_save {
+                                    self.status_message = StatusMessage::from(format!(
+                                        "File force-saved as: {}",
+                                        filename
+                                    ));
+                                } else {
+                                    self.status_message =
+                                        StatusMessage::from(format!("File saved as: {}", filename));
+                                }
                                 if pending_cmd == "wq" {
                                     self.should_quit = true;
                                 }
@@ -218,6 +240,8 @@ impl Editor {
                             self.status_message =
                                 StatusMessage::from("No filename provided.".to_owned());
                         }
+                        // reset the force flag after handling the save-as flow
+                        self.pending_force_save = false;
                         self.last_keys.clear();
                     } else {
                         // No pending special prompt — this is a normal command
@@ -448,13 +472,7 @@ impl Editor {
             modified_indicator
         );
 
-        let line_indicator = format!(
-            "{} | {}/{} | {} chars",
-            self.document.file_type(),
-            self.cursor_position.y.saturating_add(1),
-            self.document.len(),
-            self.document.char_count()
-        );
+        let line_indicator = self.document.file_type();
         #[expect(clippy::arithmetic_side_effects)]
         let len = status.len() + line_indicator.len();
         status.push_str(&" ".repeat(width.saturating_sub(len)));

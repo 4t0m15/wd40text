@@ -1,0 +1,300 @@
+# Additional Text, Help, and Document Formats
+wps: Microsoft Works Word Processor
+wpd: WordPerfect Document
+wri: Windows Write Document
+xps: XML Paper Specification
+oxps: OpenXPS Document
+chm: Compiled HTML Help
+hlp: Windows Help File
+man: Unix Manual Page
+info: GNU Info Document
+lit: Microsoft Reader eBook
+rtfd: Rich Text with Attachments
+sdw: StarWriter Document
+abw: AbiWord Document
+sxw: OpenOffice.org Writer 1.x
+
+# Archives, Compression, and Disk Images (Additional)
+sit: StuffIt Archive
+sitx: StuffIt X Archive
+ace: WinACE Archive
+arj: ARJ Archive
+lha: LHA Archive
+lzh: LZH Archive
+taz: Tar+Compress Archive
+001: Split Volume Archive Part
+wim: Windows Imaging Format
+swm: Split WIM Image
+esd: Electronic Software Download Image
+rz: Rzip Compressed Archive
+s7z: Split 7-Zip Archive
+cso: Compressed ISO Image
+dax: Compressed PSP UMD Image
+uif: MagicISO Universal Image Format
+nrg: Nero CD/DVD Image
+mds: Media Descriptor
+mdf: Disc Image (Alcohol 120%)
+ccd: CloneCD Disc Descriptor
+isz: Compressed ISO Image
+pdi: InstantCopy Disc Image
+
+# Images and Graphics (Additional)
+dds: DirectDraw Surface Image
+tga: Targa Bitmap Image
+icb: Targa ICB Image
+pcx: PC Paintbrush Bitmap
+hdr: High Dynamic Range Image
+exr: OpenEXR Image
+jp2: JPEG 2000 Image
+j2k: JPEG 2000 Codestream
+jpf: JPEG 2000 Image
+jpx: JPEG 2000 Extended Image
+j2c: JPEG 2000 Codestream
+xcf: GIMP Image
+ora: OpenRaster Image
+kra: Krita Document
+clip: Clip Studio Paint Document
+mdi: Microsoft Document Imaging File
+cur: Windows Cursor Image
+ani: Animated Cursor
+wbmp: Wireless Bitmap Image
+ppm: Portable Pixmap Image
+pgm: Portable Graymap Image
+pbm: Portable Bitmap Image
+pnm: Portable AnyMap Image
+svgz: Compressed SVG Image
+jxl: JPEG XL Image
+apng: Animated PNG Image
+
+# Audio Formats (Additional)
+au: Sun/NeXT AU Audio
+snd: Sun/NeXT Audio
+aifc: Compressed AIFF Audio
+caf: Core Audio File
+ra: RealAudio Stream
+ram: RealAudio Metafile
+ac3: Dolby Digital Audio
+dts: DTS Audio
+amr: Adaptive Multi-Rate Audio
+spx: Speex Audio
+wv: WavPack Audio
+tta: True Audio
+mpc: Musepack Audio
+gsm: GSM Audio
+voc: Creative Voice Audio
+mogg: Multitrack Ogg Audio
+
+# Video Formats (Additional)
+ogv: Ogg Video
+rm: RealMedia Video
+rmvb: RealMedia Variable Bitrate Video
+vob: DVD Video Object
+mts: AVCHD Video
+m2t: MPEG-2 Transport Stream
+f4a: Flash MP4 Audio Stream
+f4b: Flash Audiobook
+divx: DivX-Encoded Video
+h264: H.264 Raw Video Stream
+h265: H.265/HEVC Video Stream
+y4m: YUV4MPEG2 Video
+3gpp: 3GPP Multimedia Container
+3gpp2: 3GPP2 Multimedia Container
+swf: Shockwave Flash Movie
+mxf: Material eXchange Format
+
+# Subtitles and Captions (Additional)
+sup: Blu-ray Subtitle
+smi: SAMI Subtitle
+dfxp: Timed Text (DFXP)
+ttml: Timed Text Markup Language
+usf: Universal Subtitle Format
+sbv: YouTube Subtitle
+lrc: LRC Lyric File
+
+# Fonts (Additional)
+pfa: Type 1 Font (ASCII)
+pfb: Type 1 Font (Binary)
+pfm: Type 1 Font Metrics
+ttc: TrueType Font Collection
+otc: OpenType Font Collection
+afm: Adobe Font Metrics
+bdf: Bitmap Distribution Font
+
+# 3D, CAD, and Graphics (Additional)
+dwg: AutoCAD Drawing
+dxf: Drawing Exchange Format
+lwo: LightWave 3D Object
+lws: LightWave 3D Scene
+ply: Polygon Model
+wrl: VRML World
+x3d: X3D Scene
+bvh: Biovision Motion Capture
+3mf: 3D Manufacturing Format
+amf: Additive Manufacturing File
+
+# GIS and Geospatial (Additional)
+gml: Geography Markup Language
+tab: MapInfo TAB Dataset
+mif: MapInfo Interchange Format
+mid: MapInfo Attribute Table
+sid: MrSID Compressed Image
+ecw: Enhanced Compressed Wavelet Image
+dem: Digital Elevation Model
+grib: GRIB Meteorological Data
+e00: ArcInfo Interchange File
+bil: Band Interleaved by Line Raster
+flt: ESRI Floating Point Grid
+las: LiDAR Point Cloud
+laz: Compressed LiDAR Point Cloud
+
+# Scientific, Engineering, and Research Data (Additional)
+fits: Flexible Image Transport System
+pdb: Protein Data Bank
+mol: MDL Molfile
+sdf: Structure Data File
+cdx: ChemDraw Document
+cdxml: ChemDraw XML Document
+spc: Spectroscopy Data
+fcs: Flow Cytometry Standard
+wiff: Mass Spectrometry Data (AB SCIEX)
+mzml: Mass Spectrometry Data (mzML)
+mrc: Electron Microscopy MRC Image
+dx: OpenDX Data File
+cif: Crystallographic Information File
+
+# Databases and Structured Storage (Additional)
+ndf: SQL Server Secondary Data File
+ldf: SQL Server Log File
+frm: MySQL Table Definition
+myd: MySQL MyISAM Data
+myi: MySQL MyISAM Index
+ibd: InnoDB Tablespace
+sqlite-wal: SQLite Write-Ahead Log
+sqlite-shm: SQLite Shared-Memory File
+gdb: Esri File Geodatabase
+fp7: FileMaker Pro 7 Database
+accda: Microsoft Access Add-in
+
+# E-books and Digital Comics (Additional)
+cbt: Comic Book (TAR)
+cb7: Comic Book (7z)
+azw4: Kindle Print Replica eBook
+kfx: Kindle KFX eBook
+kpf: Kindle Package Format
+
+# Email and Messaging (Additional)
+emlx: Apple Mail Message
+mbx: Mailbox (Eudora/others)
+olm: Outlook for Mac Archive
+
+# Virtualization and VM Files (Additional)
+pvm: Parallels Virtual Machine
+vmsn: VMware Snapshot
+vmx: VMware Configuration
+vmtm: VMware Team Configuration
+nvram: VMware NVRAM File
+pvs: Parallels VM Configuration
+hds: Parallels Disk Image
+
+# Game ROMs, Emulation, and Save Data
+nes: NES ROM Image
+sfc: SNES ROM Image (headerless)
+smc: SNES ROM Image (with copier header)
+gb: Game Boy ROM
+gbc: Game Boy Color ROM
+gba: Game Boy Advance ROM
+nds: Nintendo DS ROM
+cia: Nintendo 3DS Installable Archive
+n64: Nintendo 64 ROM
+z64: Nintendo 64 Big Endian ROM
+v64: Nintendo 64 Byte-Swapped ROM
+gcm: GameCube Disc Image
+rvz: Dolphin Compressed GameCube/Wii Image
+wbfs: Wii Backup File System Image
+wud: Wii U Disc Image
+sms: Sega Master System ROM
+gg: Game Gear ROM
+pce: PC Engine/TurboGrafx-16 ROM
+vb: Virtual Boy ROM
+ngp: Neo Geo Pocket ROM
+d64: Commodore 64 Disk Image
+g64: Commodore 1541 G64 Disk Image
+adf: Amiga Disk File
+adz: Compressed Amiga Disk
+ipf: Amiga Preservation Image
+tap: Tape Image (8-bit systems)
+tzx: ZX Spectrum Tape Image
+sna: ZX Spectrum Snapshot
+srm: SNES SRAM Save
+sav: Game Save Data
+dsv: DeSmuME Save Data
+state: Emulator Save State
+mcr: PlayStation Memory Card
+psv: PlayStation 3 Save
+gci: GameCube Save File
+
+# Game Assets and Mods
+wad: Doom Engine WAD Archive
+pk3: id Tech 3 PK3 Archive
+pk4: id Tech 4 PK4 Archive
+bsp: Quake BSP Map
+vpk: Valve Pak Archive
+rpf: Rockstar Games RPF Archive
+pak2: Game Package Archive (Quake II)
+u: Unreal Package
+upk: Unreal Engine 3 Package
+pck: Godot PCK Archive
+assetbundle: Unity AssetBundle
+mpq: Blizzard MPQ Archive
+
+# DAW and Audio Project Formats
+als: Ableton Live Set
+alc: Ableton Live Clip
+ptf: Pro Tools 7–9 Session
+ptx: Pro Tools 10+ Session
+logicx: Logic Pro Project
+band: GarageBand Project
+cpr: Cubase Project
+npr: Nuendo Project
+rpp: REAPER Project
+song: Studio One Song
+sesx: Adobe Audition Session
+omf: Open Media Framework Interchange
+aaf: Advanced Authoring Format
+dawproject: DAWproject Interchange Session
+
+# Additional Programming Languages and Tools
+d: D Source
+nim: Nim Source
+nimble: Nimble Package Specification
+zig: Zig Source
+hx: Haxe Source
+vala: Vala Source
+ino: Arduino Sketch
+ahk: AutoHotkey Script
+ahk2: AutoHotkey v2 Script
+
+# Additional Configuration, Project, and Metadata Files
+code-workspace: VS Code Workspace
+suo: Visual Studio User Options
+user: IDE User Settings
+sublime-project: Sublime Text Project
+sublime-workspace: Sublime Text Workspace
+vscodeignore: VS Code Package Ignore
+npmignore: npm Ignore Rules
+eslintignore: ESLint Ignore Rules
+babelignore: Babel Ignore Rules
+prettierignore: Prettier Ignore Rules
+clang-format: Clang-Format Config
+clang-tidy: Clang-Tidy Config
+
+# Miscellaneous (Additional)
+md5: MD5 Checksum File
+sha1: SHA-1 Checksum File
+sha256: SHA-256 Checksum File
+thumbsdb: Windows Thumbnail Cache
+ds_store: macOS Finder Metadata
+webloc: macOS Internet Shortcut
+urlshortcut: Generic URL Shortcut
+crash: Crash Report
+mdmp: Windows Minidump
